@@ -1,0 +1,22 @@
+\captionof{table}{Maquina _29 \\Numero de procesadores disponibles 8 \\Numero de threads 4}% 
+$$\begin{tabular}{|c|c|c|c|c|} 
+\hline 
+Metodo & $\mu$ & MIN & MAX & $\sigma^{2}$\\ 
+\hline 
+omp_bubble_sort & 1.976E-04 & 0.000E+00 & 1.976E+01 & 3.904E-03\\ 
+\hline 
+\end{tabular}$$\captionof{table}{Maquina _29 \\Numero de procesadores disponibles 8 \\Numero de threads 4}% 
+$$\begin{tabular}{|c|c|c|c|c|} 
+\hline 
+Metodo & $\mu$ & MIN & MAX & $\sigma^{2}$\\ 
+\hline 
+omp_bubble_sort & 1.972E-04 & 0.000E+00 & 1.972E+01 & 3.888E-03\\ 
+\hline 
+\end{tabular}$$\captionof{table}{Maquina _29 \\Numero de procesadores disponibles 8 \\Numero de threads 4}% 
+$$\begin{tabular}{|c|c|c|c|c|} 
+\hline 
+Metodo & $\mu$ & MIN & MAX & $\sigma^{2}$\\ 
+\hline 
+omp_bubble_sort & 2.007E-03 & 0.000E+00 & 2.039E+01 & 4.029E-02\\ 
+\hline 
+\end{tabular}$$

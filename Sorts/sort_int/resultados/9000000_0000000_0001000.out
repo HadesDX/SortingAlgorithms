@@ -1,0 +1,16 @@
+\captionof{table}{Maquina _29 \\Numero de procesadores disponibles 16 \\Numero de threads 8}% 
+$$\begin{tabular}{|c|c|c|c|c|} 
+\hline 
+Metodo & $\mu$ & MIN & MAX & $\sigma^{2}$\\ 
+\hline 
+omp_bubble_sort & 3.180E-02 & 0.000E+00 & 2.862E+05 & 9.100E+03\\ 
+\hline 
+omp_odd_even_sort & 2.644E-01 & 0.000E+00 & 3.020E+04 & 6.587E+03\\ 
+\hline 
+QuickSort & 1.633E-06 & 0.000E+00 & 1.871E-01 & 2.400E-07\\ 
+\hline 
+RadixSort & 8.586E-06 & 0.000E+00 & 8.581E-01 & 6.637E-06\\ 
+\hline 
+Mergesort_Omp & 8.622E-06 & 0.000E+00 & 7.900E-01 & 6.691E-06\\ 
+\hline 
+\end{tabular}$$
