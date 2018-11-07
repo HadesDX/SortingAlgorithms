@@ -39,32 +39,41 @@ public class Sort {
 		}
 		System.out.println("Sample size: " + data.length);
 		int cores = Runtime.getRuntime().availableProcessors();
+		int runs = 5;
+		cores = 2;
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
 		System.out.println("Cores per socket: " + AffinityLock.cpuLayout().coresPerSocket());
 		System.out.println("Threads per core: " + AffinityLock.cpuLayout().threadsPerCore());
-		try (AffinityLock al = AffinityLock.acquireLock()) {
-			// do some work while locked to a CPU.
-			for (int i = 0; i < 1; ++i) {
-				// testSortable(new BubbleSort(), i, data, cores);
-				// testSortable(new OddEvenSort(), i, data, cores);
-				// testSortable(new RankSort(), i, data, cores);
-				testSortable(new CountingSort(), i, data, cores);
-				testSortable(new BitonicSort(), i, data, cores);
-				testSortable(new QuickSort(), i, data, cores);
-				testSortable(new RadixSort(), i, data, cores);
-				testSortable(new MergeSort(), i, data, cores);
-			}
+
+		// do some work while locked to a CPU.
+		for (int i = 0; i < 1; ++i) {// threaded version
+			// testSortable(new BubbleSort(), i, data, cores, runs);
+			// testSortable(new OddEvenSort(), i, data, cores, runs);
+			// testSortable(new RankSort(), i, data, cores, runs);
+			testSortable(new CountingSort(), i, data, cores, runs);
+			testSortable(new BitonicSort(), i, data, cores, runs);
+			testSortable(new QuickSort(), i, data, cores, runs);
+			testSortable(new RadixSort(), i, data, cores, runs);
+			testSortable(new MergeSort(), i, data, cores, runs);
 		}
+
 	}
 
-	public static void testSortable(Sortable s, int version, int data[], int cores) {
+	public static void testSortable(Sortable s, int version, int data[], int cores, int runs) {
 		long[] time = new long[cores + 1];
-		time[0] = testSerial(s, 5, data);
-		/*
-		 * for (int i = 1; i < cores + 1; ++i) { try { time[i] = testThreaded(s,
-		 * version, 10, data, i); } catch (Exception e) { e.printStackTrace(); } }
-		 */
+		try (AffinityLock al = AffinityLock.acquireLock()) {
+			time[0] = testSerial(s, runs, data);
+		}
+
+		for (int i = 1; i < cores + 1; ++i) {
+			try {
+				time[i] = testThreaded(s, version, runs, data, i);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
 		for (int i = 1; i < cores + 1; ++i) {
 			outEnhacement(i, time[0], time[i]);
 		}
@@ -90,9 +99,11 @@ public class Sort {
 				times.add(serialtime);
 				System.out.print("," + serialtime);
 			} else {
+				times.clear();
 				times.add(-1l);
 				System.out.print(",-1 ");
 				System.out.println(Arrays.toString(clone));
+				break;
 			}
 		}
 
@@ -121,8 +132,10 @@ public class Sort {
 				times.add(serialtime);
 				System.out.print("," + serialtime);
 			} else {
+				times.clear();
 				times.add(-1l);
 				System.out.print(",-1");
+				break;
 			}
 			times.add(serialtime);
 		}
