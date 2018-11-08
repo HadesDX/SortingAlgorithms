@@ -22,10 +22,10 @@ public class Sort {
 	static int[] ordered = null;
 
 	public static void main(String[] args) {
-		int[] data = DataLoader
-				.load("Sorts" + File.separator + "data_in" + File.separator + "0100000_0000000_0001000.in");
-		// int[] data = new int[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 19, 18, 17, 16, 0,
-		// 15, 11, 14, 13, 12, 11 };
+		// int[] data = DataLoader
+		// .load("Sorts" + File.separator + "data_in" + File.separator +
+		// "0100000_0000000_0001000.in");
+		int[] data = new int[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 19, 18, 17, 16, 0, 15, 11, 14, 13, 12, 11 };
 		// int[] data = new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38,
 		// 99, 9, 74, 80, 11, 39, 54, 94, 6,
 		// 97, 73, 38, 26, 74, 8, 5, 34, 73, 57, 54, 35, 62, 68, 85, 85, 81, 31, 80, 77,
@@ -52,10 +52,10 @@ public class Sort {
 			// testSortable(new OddEvenSort(), i, data, cores, runs);
 			// testSortable(new RankSort(), i, data, cores, runs);
 			testSortable(new CountingSort(), i, data, cores, runs);
-			testSortable(new BitonicSort(), i, data, cores, runs);
-			testSortable(new QuickSort(), i, data, cores, runs);
-			testSortable(new RadixSort(), i, data, cores, runs);
-			testSortable(new MergeSort(), i, data, cores, runs);
+			//testSortable(new BitonicSort(), i, data, cores, runs);
+			//testSortable(new QuickSort(), i, data, cores, runs);
+			//testSortable(new RadixSort(), i, data, cores, runs);
+			//testSortable(new MergeSort(), i, data, cores, runs);
 		}
 
 	}
