@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import net.openhft.affinity.AffinityLock;
 
@@ -22,10 +23,10 @@ public class Sort {
 	static int[] ordered = null;
 
 	public static void main(String[] args) {
-		// int[] data = DataLoader
-		// .load("Sorts" + File.separator + "data_in" + File.separator +
-		// "0100000_0000000_0001000.in");
-		int[] data = new int[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 19, 18, 17, 16, 0, 15, 11, 14, 13, 12, 11 };
+		int[] data = DataLoader
+				.load("Sorts" + File.separator + "data_in" + File.separator + "0100000_0000000_0001000.in");
+		// int[] data = new int[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 19, 18, 17, 16, 0,
+		// 15, 11, 14, 13, 12, 11 };
 		// int[] data = new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38,
 		// 99, 9, 74, 80, 11, 39, 54, 94, 6,
 		// 97, 73, 38, 26, 74, 8, 5, 34, 73, 57, 54, 35, 62, 68, 85, 85, 81, 31, 80, 77,
@@ -48,14 +49,14 @@ public class Sort {
 
 		// do some work while locked to a CPU.
 		for (int i = 0; i < 1; ++i) {// threaded version
-			// testSortable(new BubbleSort(), i, data, cores, runs);
-			// testSortable(new OddEvenSort(), i, data, cores, runs);
-			// testSortable(new RankSort(), i, data, cores, runs);
+			testSortable(new BubbleSort(), i, data, cores, runs);
+			testSortable(new OddEvenSort(), i, data, cores, runs);
+			testSortable(new RankSort(), i, data, cores, runs);
 			testSortable(new CountingSort(), i, data, cores, runs);
-			//testSortable(new BitonicSort(), i, data, cores, runs);
-			//testSortable(new QuickSort(), i, data, cores, runs);
-			//testSortable(new RadixSort(), i, data, cores, runs);
-			//testSortable(new MergeSort(), i, data, cores, runs);
+			// testSortable(new BitonicSort(), i, data, cores, runs);
+			// testSortable(new QuickSort(), i, data, cores, runs);
+			// testSortable(new RadixSort(), i, data, cores, runs);
+			// testSortable(new MergeSort(), i, data, cores, runs);
 		}
 
 	}
@@ -80,7 +81,8 @@ public class Sort {
 	}
 
 	public static void outEnhacement(int cores, long t1, long t2) {
-		System.out.println("Enhacement: " + cores + " cores " + (((double) t1 / (double) t2) * 100.0 - 100.0));
+		System.out.println(
+				"Enhacement: " + cores + " cores " + (((double) t1 / (double) t2) * 100.0 - 100.0) + " Slower");
 	}
 
 	public static long testSerial(Sortable s, int runs, int[] data) {
@@ -108,7 +110,11 @@ public class Sort {
 		}
 
 		// System.out.println(Arrays.toString(clone));
-		long av = times.stream().filter(e -> e != -1).reduce((x, y) -> x + y).orElse(0l) / times.size();
+		Long st = times.stream().filter(e -> e != -1).count();
+		long av = 0;
+		if (st > 0) {
+			av = times.stream().filter(e -> e != -1).reduce((x, y) -> x + y).orElse(0l) / st;
+		}
 		long avmilis = av / 1000000;
 		long avsec = avmilis / 1000;
 		System.out.println(" Av.Time Seconds:" + avsec + " Milis:" + avmilis + " Nanos:" + av);
@@ -140,7 +146,11 @@ public class Sort {
 			times.add(serialtime);
 		}
 
-		long av = times.stream().filter(e -> e != -1).reduce((x, y) -> x + y).orElse(0l) / times.size();
+		Long st = times.stream().filter(e -> e != -1).count();
+		long av = 0;
+		if (st > 0) {
+			av = times.stream().filter(e -> e != -1).reduce((x, y) -> x + y).orElse(0l) / st;
+		}
 		long avmilis = av / 1000000;
 		long avsec = avmilis / 1000;
 		System.out.println(" Av.Time Seconds:" + avsec + " Milis:" + avmilis + " Nanos:" + av);
