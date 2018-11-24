@@ -609,3 +609,52 @@ OK Sorted omp_odd_even_sort
 OK Sorted omp_odd_even_sort
 OK Sorted omp_odd_even_sort
 OK Sorted omp_odd_even_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_odd_even_sort
+OK Sorted omp_odd_even_sort
+OK Sorted omp_odd_even_sort
+OK Sorted omp_odd_even_sort
+OK Sorted omp_odd_even_sort
+OK Sorted QuickSort
+OK Sorted QuickSort
+OK Sorted QuickSort
+OK Sorted QuickSort
+OK Sorted QuickSort
+OK Sorted RadixSort
+OK Sorted RadixSort
+OK Sorted RadixSort
+OK Sorted RadixSort
+OK Sorted RadixSort
+Error en algoritmo Mergesort_Omp
+Error en algoritmo Mergesort_Omp
+Error en algoritmo Mergesort_Omp
+Error en algoritmo Mergesort_Omp
+Error en algoritmo Mergesort_Omp
+Error en algoritmo bitonic
+Error en algoritmo bitonic
+Error en algoritmo bitonic
+Error en algoritmo bitonic
+Error en algoritmo bitonic
+Error en algoritmo omp_rank_sort
+Error en algoritmo omp_rank_sort
+Error en algoritmo omp_rank_sort
+Error en algoritmo omp_rank_sort
+Error en algoritmo omp_rank_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_odd_even_sort
+OK Sorted QuickSort
+OK Sorted RadixSort
+Error en algoritmo Mergesort_Omp
+Error en algoritmo bitonic
+OK Sorted omp_rank_sort
+OK Sorted omp_bubble_sort
+OK Sorted omp_odd_even_sort
+OK Sorted QuickSort
+OK Sorted RadixSort
+Error en algoritmo Mergesort_Omp
+Error en algoritmo bitonic
+Error en algoritmo omp_rank_sort

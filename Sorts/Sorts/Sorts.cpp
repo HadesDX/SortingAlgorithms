@@ -247,9 +247,9 @@ int main(int argc, char *argv[]) {
 		//N_samples = 100;
 		//N_THREADS = 8;
 		//n_funciones = 5;
-		N_samples = 10;
+		N_samples = 1;
 		N_THREADS = 4;
-		n_funciones = 1;
+		n_funciones = 8;
 		omp_set_num_threads(N_THREADS);
 		N_PROCESADORES = omp_get_num_procs();
 		//omp_set_num_threads(N_THREADS);

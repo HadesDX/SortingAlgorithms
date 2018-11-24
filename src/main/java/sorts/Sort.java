@@ -3,6 +3,7 @@ package sorts;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -23,56 +24,85 @@ public class Sort {
 	static int[] ordered = null;
 
 	public static void main(String[] args) {
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		int[] data = DataLoader
 				.load("Sorts" + File.separator + "data_in" + File.separator + "0100000_0000000_0001000.in");
 		// int[] data = new int[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 19, 18, 17, 16, 0,
 		// 15, 11, 14, 13, 12, 11 };
-		// int[] data = new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38,
-		// 99, 9, 74, 80, 11, 39, 54, 94, 6,
-		// 97, 73, 38, 26, 74, 8, 5, 34, 73, 57, 54, 35, 62, 68, 85, 85, 81, 31, 80, 77,
-		// 54, 55, 47, 32, 34, 87,
-		// 70, 52, 27, 10, 90, 74, 100, 98, 81, 30, 5, 63, 33, 74, 30, 95, 70, 88, 40,
-		// 61, 69, 45, 59, 2, 11, 32,
-		// 33, 99, 1, 43, 2, 79, 15, 67, 25, 13, 33, 27, 24, 51, 44, 34, 18, 51, 39, 66,
-		// 8, 80, 15, 88, 43, 72 };
+		/*
+		 * int[] data = new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38,
+		 * 99, 9, 74, 80, 11, 39, 54, 94, 6, 97, 73, 38, 26, 74, 8, 5, 34, 73, 57, 54,
+		 * 35, 62, 68, 85, 85, 81, 31, 80, 77, 54, 55, 47, 32, 34, 87, 70, 52, 27, 10,
+		 * 90, 74, 100, 98, 81, 30, 5, 63, 33, 74, 30, 95, 70, 88, 40, 61, 69, 45, 59,
+		 * 2, 11, 32, 33, 99, 1, 43, 2, 79, 15, 67, 25, 13, 33, 27, 24, 51, 44, 34, 18,
+		 * 51, 39, 66, 8, 80, 15, 88, 43, 72 };
+		 */
 		if (data == null) {
 			System.out.println("No data");
 		}
-		System.out.println("Sample size: " + data.length);
+		ordered = data.clone();
+		Arrays.sort(ordered);
+		if (data.length < 500) {
+			System.out.println("Ordered Data:");
+			System.out.println(Arrays.toString(ordered));
+		}
 		int cores = Runtime.getRuntime().availableProcessors();
-		int runs = 5;
-		cores = 2;
+		int runs = 500;
+		cores = 6;
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
 		System.out.println("Cores per socket: " + AffinityLock.cpuLayout().coresPerSocket());
 		System.out.println("Threads per core: " + AffinityLock.cpuLayout().threadsPerCore());
 
 		// do some work while locked to a CPU.
-		for (int i = 0; i < 1; ++i) {// threaded version
-			testSortable(new BubbleSort(), i, data, cores, runs);
-			testSortable(new OddEvenSort(), i, data, cores, runs);
-			testSortable(new RankSort(), i, data, cores, runs);
-			testSortable(new CountingSort(), i, data, cores, runs);
-			// testSortable(new BitonicSort(), i, data, cores, runs);
-			// testSortable(new QuickSort(), i, data, cores, runs);
-			// testSortable(new RadixSort(), i, data, cores, runs);
-			// testSortable(new MergeSort(), i, data, cores, runs);
+		for (int version = 0; version < 1; ++version) {// threaded version
+			// testSortable(new BubbleSort(), version, data, cores, runs);
+			// testSortable(new OddEvenSort(), version, data, cores, runs);
+			// testSortable(new RankSort(), version, data, cores, runs);
+			testSortable(new CountingSort(), version, data, cores, runs);
+			// testSortable(new BitonicSort(), version, data, cores, runs);
+			// testSortable(new QuickSort(), version, data, cores, runs);
+			// testSortable(new RadixSort(), version, data, cores, runs);
+			// testSortable(new MergeSort(), version, data, cores, runs);
 		}
-
+		if (data.length < 500) {
+			System.out.println("Ordered Data:");
+			System.out.println(Arrays.toString(ordered));
+		}
 	}
 
 	public static void testSortable(Sortable s, int version, int data[], int cores, int runs) {
 		long[] time = new long[cores + 1];
-		try (AffinityLock al = AffinityLock.acquireLock()) {
+		AffinityLock singleLock = AffinityLock.acquireCore();
+		try {
 			time[0] = testSerial(s, runs, data);
+		} finally {
+			if (singleLock != null) {
+				singleLock.release();
+			}
 		}
 
-		for (int i = 1; i < cores + 1; ++i) {
-			try {
-				time[i] = testThreaded(s, version, runs, data, i);
-			} catch (Exception e) {
-				e.printStackTrace();
+		// AffinityLock multiLock = AffinityLock.acquireCore();
+		// AffinityLock multiLock2 = AffinityLock.acquireCore();
+		// AffinityLock multiLock3 = AffinityLock.acquireCore();
+		try {
+			for (int i = 1; i < cores + 1; ++i) {
+				try {
+					time[i] = testThreaded(s, version, runs, data, i);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
+		} finally {
+			/*
+			 * if (multiLock != null) { multiLock.release(); } if (multiLock2 != null) {
+			 * multiLock2.release(); } if (multiLock3 != null) { multiLock3.release(); }
+			 */
 		}
 
 		for (int i = 1; i < cores + 1; ++i) {
@@ -95,16 +125,13 @@ public class Sort {
 			long t2 = System.nanoTime();
 			long serialtime = t2 - t1;
 			if (verify(clone)) {
-				if (ordered == null) {
-					ordered = clone;
-				}
 				times.add(serialtime);
 				System.out.print("," + serialtime);
 			} else {
 				times.clear();
 				times.add(-1l);
-				System.out.print(",-1 ");
-				System.out.println(Arrays.toString(clone));
+				System.out.print(",-1 " + serialtime);
+				// System.out.println(Arrays.toString(clone));
 				break;
 			}
 		}
@@ -127,23 +154,21 @@ public class Sort {
 		for (int i = 0; i < runs; ++i) {
 			int[] clone = data.clone();
 			long t1 = System.nanoTime();
+			// System.out.println(Arrays.toString(data));
 			clone = s.sortThreaded(version, clone, threads);
 			long t2 = System.nanoTime();
 			// System.out.println(Arrays.toString(clone));
-			long serialtime = t2 - t1;
+			long threadedTime = t2 - t1;
 			if (verify(clone)) {
-				if (ordered == null) {
-					ordered = clone;
-				}
-				times.add(serialtime);
-				System.out.print("," + serialtime);
+				times.add(threadedTime);
+				System.out.print("," + threadedTime);
 			} else {
 				times.clear();
 				times.add(-1l);
-				System.out.print(",-1");
+				System.out.print(",-1 " + threadedTime);
 				break;
 			}
-			times.add(serialtime);
+			times.add(threadedTime);
 		}
 
 		Long st = times.stream().filter(e -> e != -1).count();
@@ -159,9 +184,14 @@ public class Sort {
 
 	public static boolean verify(int[] data) {
 		int i;
+		if (data == null) {
+			return false;
+		}
 		if (ordered != null) {
 			for (i = 0; i < data.length; ++i) {
 				if (data[i] != ordered[i]) {
+					System.out.println("Verifing data error:");
+					System.out.println(Arrays.toString(data));
 					return false;
 				}
 			}
@@ -172,6 +202,7 @@ public class Sort {
 				}
 			}
 		}
+		// System.out.println(Arrays.toString(data));
 		return true;
 	}
 }

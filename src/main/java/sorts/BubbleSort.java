@@ -26,6 +26,11 @@ public class BubbleSort implements Sortable {
 	}
 
 	@Override
+	public String toString() {
+		return "BubbleSort";
+	}
+
+	@Override
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
@@ -93,11 +98,6 @@ public class BubbleSort implements Sortable {
 		// System.out.println("Finallizing");
 
 		return in;
-	}
-
-	@Override
-	public String toString() {
-		return "BubbleSort";
 	}
 
 	public int[] sortThreaded1(int[] in, int threads) throws Exception {
