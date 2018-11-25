@@ -1,5 +1,8 @@
 package sorts;
 
+import java.util.Arrays;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -45,69 +48,184 @@ public class RankSort implements Sortable {
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
-			return sortThreaded0(in, threads);
+			return rankByFragmentsJoinAtTheFinal(in, threads);
 		}
 		return null;
 	}
 
-	public int[] sortThreaded0(int[] in, int threads) throws Exception {
-		AtomicIntegerArray array = new AtomicIntegerArray(in.length);
+	public int[] rankByFragmentsJoinAtTheFinal(int[] in, int threads) throws Exception {
 
 		class RankSortRunnable implements Runnable {
+			CyclicBarrier barrier;
 			private int s;
 			private int e;
-			private int step;
+			private int n;
+			private int id;
+			private int join;
 			private int[] in;
-			public boolean swaps;
+			private int[] result;
+			public boolean joinb = true;
+			RankSortRunnable[] runners;
 
-			RankSortRunnable(int[] in, int s, int step) {
+			RankSortRunnable(int[] in, int s, int end, CyclicBarrier barrier, int id, RankSortRunnable[] runners) {
 				this.s = s;
 				this.in = in;
-				this.e = in.length - 1;
-				this.step = step;
+				this.e = end;
+				this.n = e - s;
+				this.barrier = barrier;
+				this.result = new int[n];
+				this.id = id;
+				this.join = 1;
+				this.runners = runners;
 			}
 
-			public void run() {
-				swaps = false;
-				int aux;
-				for (int i = s; i < e; i += step) {
-					if (in[i] > in[i + 1]) {
-						aux = in[i];
-						in[i] = in[i + 1];
-						in[i + 1] = aux;
-						swaps = true;
+			public void merge(int[] A, int[] B, int[] C) {
+				int i, j, k, m, n;
+				i = 0;
+				j = 0;
+				k = 0;
+				m = A.length;
+				n = B.length;
+
+				while (i < m && j < n) {
+					if (A[i] <= B[j]) {
+						C[k] = A[i];
+						i++;
+					} else {
+						C[k] = B[j];
+						j++;
+					}
+					k++;
+				}
+
+				if (i < m) {
+					for (int p = i; p < m; p++) {
+						C[k] = A[p];
+						k++;
+					}
+				} else {
+					for (int p = j; p < n; p++) {
+						C[k] = B[p];
+						k++;
 					}
 				}
 			}
+
+			public void run() {
+				int i, j, k;
+				int[] out = new int[n];
+				int rank;
+
+				for (i = s; i < e; ++i) {
+					rank = 0;
+					for (j = s; j < e; ++j) {
+						if (in[j] < in[i]) {
+							++rank;
+						}
+					}
+					out[rank] = in[i];
+				}
+				for (k = 0; k < n; ++k) {
+					if (out[k] == 0) {
+						if (k != 0) {
+							result[k] = result[k - 1];
+						} else {
+							result[k] = 0;
+						}
+					} else {
+						result[k] = out[k];
+					}
+				}
+				// System.out.println("size:" + result.length + " - " +
+				// Arrays.toString(result));
+
+				try {
+					barrier.await();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					e.printStackTrace();
+				}
+				// Join
+				while (join < threads) {
+					if (!joinb || id + join > threads - 1) {
+						// try {
+						// Thread.sleep(100);
+						// } catch (InterruptedException e) {
+						// e.printStackTrace();
+						// }
+						// System.out.println("id: " + id + " DO NOTHING join " + join + " should join "
+						// + (id + join)
+						// + " offsetTest " + (id + join > threads) + " oddTest:" + ((id & 1) == 1) + "
+						// threads "
+						// + threads);
+					} else {
+						// System.out.println("id: " + id + " join " + join + " should join " + (id +
+						// join));
+						int[] r = new int[result.length + runners[id + join].result.length];
+						merge(result, runners[id + join].result, r);
+						result = r;
+						runners[id + join].result = null;
+					}
+
+					join <<= 1;
+					try {
+						barrier.await();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (BrokenBarrierException e) {
+						e.printStackTrace();
+					}
+				}
+
+			}
+		}
+		class RankSortRunnableChecker implements Runnable {
+			RankSortRunnable[] runners;
+			int start = 1;
+			int join = 2;
+
+			public RankSortRunnableChecker(RankSortRunnable[] runners) {
+				this.runners = runners;
+			}
+
+			@Override
+			public void run() {
+				//System.out.println("join!");
+				for (int i = start; i < threads; i += join) {
+					// System.out.println(i);
+					runners[i].joinb = false;
+				}
+				start <<= 1;
+				join <<= 1;
+			}
+
 		}
 
 		RankSortRunnable[] runners = new RankSortRunnable[threads];
-
+		RankSortRunnableChecker checker = new RankSortRunnableChecker(runners);
+		CyclicBarrier barrier = new CyclicBarrier(threads, checker);
+		int chunks = in.length / threads;
+		int index = 0;
 		int i;
+		for (i = 0; i < threads - 1; i++) {
+			runners[i] = new RankSortRunnable(in, index, index + chunks, barrier, i, runners);
+			index += chunks;
+		}
+		runners[i] = new RankSortRunnable(in, index, in.length, barrier, i, runners);
+
+		Thread[] results = new Thread[threads];
 		for (i = 0; i < threads; i++) {
-			runners[i] = new RankSortRunnable(in, i * 2, threads);
+			results[i] = new Thread(runners[i], "RankSortT-" + i);
+			results[i].setDaemon(true);
+			results[i].start();
 		}
-
-		Future<?>[] results = new Future<?>[threads];
-
-		ExecutorService executor = Executors.newFixedThreadPool(threads);
-		boolean swaps = true;
-		while (swaps) {
-			// System.out.println("Loop " + j);
-			for (i = 0; i < threads; i++) {
-				results[i] = executor.submit(runners[i]);
-			}
-			swaps = false;
-			for (i = 0; i < threads; i++) {
-				results[i].get();
-				swaps = swaps | runners[i].swaps;
-			}
-			// System.out.println("Loop End " + j);
+		for (i = 0; i < threads; i++) {
+			results[i].join();
 		}
-		executor.shutdown();
+		// System.out.println("MAIN SORT FINISH:" + System.currentTimeMillis());
 		// System.out.println("Finallizing");
-
-		return in;
+		return runners[0].result;
 	}
 
 }
