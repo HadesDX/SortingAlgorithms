@@ -1,12 +1,7 @@
 package sorts;
 
-import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class RankSort implements Sortable {
 
@@ -55,7 +50,7 @@ public class RankSort implements Sortable {
 
 	public int[] rankByFragmentsJoinAtTheFinal(int[] in, int threads) throws Exception {
 
-		class RankSortRunnable implements Runnable {
+		class RankSortRunnable extends HelperRunnable {
 			CyclicBarrier barrier;
 			private int s;
 			private int e;
@@ -77,39 +72,7 @@ public class RankSort implements Sortable {
 				this.id = id;
 				this.join = 1;
 				this.runners = runners;
-			}
-
-			public void merge(int[] A, int[] B, int[] C) {
-				int i, j, k, m, n;
-				i = 0;
-				j = 0;
-				k = 0;
-				m = A.length;
-				n = B.length;
-
-				while (i < m && j < n) {
-					if (A[i] <= B[j]) {
-						C[k] = A[i];
-						i++;
-					} else {
-						C[k] = B[j];
-						j++;
-					}
-					k++;
-				}
-
-				if (i < m) {
-					for (int p = i; p < m; p++) {
-						C[k] = A[p];
-						k++;
-					}
-				} else {
-					for (int p = j; p < n; p++) {
-						C[k] = B[p];
-						k++;
-					}
-				}
-			}
+			}			
 
 			public void run() {
 				int i, j, k;
@@ -191,7 +154,7 @@ public class RankSort implements Sortable {
 
 			@Override
 			public void run() {
-				//System.out.println("join!");
+				// System.out.println("join!");
 				for (int i = start; i < threads; i += join) {
 					// System.out.println(i);
 					runners[i].joinb = false;

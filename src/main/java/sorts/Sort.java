@@ -52,7 +52,7 @@ public class Sort {
 			System.out.println(Arrays.toString(ordered));
 		}
 		int cores = Runtime.getRuntime().availableProcessors();
-		int runs = 1;
+		int runs = 100;
 		cores = 3;
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
@@ -61,12 +61,12 @@ public class Sort {
 
 		// do some work while locked to a CPU.
 		for (int version = 0; version < 1; ++version) {// threaded version
-			testSortable(new BubbleSort(), version, data, cores, runs);
+			// testSortable(new BubbleSort(), version, data, cores, runs);
 			// testSortable(new OddEvenSort(), version, data, cores, runs);
 			// testSortable(new RankSort(), version, data, cores, runs);
-			// testSortable(new CountingSort(), version, data, cores, runs);
+			testSortable(new CountingSort(), version, data, cores, runs);
 			// testSortable(new BitonicSort(), version, data, cores, runs);
-			// testSortable(new QuickSort(), version, data, cores, runs);
+			testSortable(new QuickSort(), version, data, cores, runs);
 			// testSortable(new RadixSort(), version, data, cores, runs);
 			// testSortable(new MergeSort(), version, data, cores, runs);
 		}
@@ -115,8 +115,8 @@ public class Sort {
 	}
 
 	public static void outEnhacement(int cores, long t1, long t2) {
-		System.out.println(
-				"Enhacement: " + cores + " cores " + (((double) t1 / (double) t2) * 100.0 - 100.0) + " Slower");
+		double val = ((double) t1 / (double) t2) * 100.0 - 100.0;
+		System.out.println("Enhacement: " + cores + " cores " + val + (val < 0 ? "% slower" : "% faster"));
 	}
 
 	public static long testSerial(Sortable s, int runs, int[] data) {

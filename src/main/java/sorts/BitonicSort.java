@@ -14,6 +14,8 @@ public class BitonicSort implements Sortable {
 	@Override
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
+		case 0:
+			return sortThreaded(in, threads);
 		}
 		return in;
 	}
@@ -59,6 +61,22 @@ public class BitonicSort implements Sortable {
 		while (k > 0 && k < n)
 			k = k << 1;
 		return k >>> 1;
+	}
+
+	private int[] sortThreaded(int[] in, int threads) {
+		this.in = in;
+		bitonicSortT(0, in.length, ASCENDING);
+		return in;
+	}
+
+	private void bitonicSortT(int lo, int n, boolean up) {
+		//? XD me falta dormir :D ya no se que estoy haciendo :D
+		if (n > 1) {
+			int m = n / 2;
+			bitonicSort(lo, m, !up);
+			bitonicSort(lo + m, n - m, up);
+			bitonicMerge(lo, n, up);
+		}
 	}
 
 }

@@ -213,12 +213,8 @@ public class BubbleSort implements Sortable {
 	}
 
 	public int[] bubleByFragmentsJoinAtTheFinal(int[] in, int threads) throws Exception {
-		class FlagHolder {
-			public boolean useBuff;
-		}
 
 		int[] buff = new int[in.length];
-		FlagHolder flags = new FlagHolder();
 
 		class BubbleSortRunnable extends HelperRunnable {
 			CyclicBarrier barrier;
