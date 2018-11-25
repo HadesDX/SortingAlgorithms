@@ -342,7 +342,7 @@ public class BubbleSort implements Sortable {
 
 		Thread[] results = new Thread[threads];
 		for (i = 0; i < threads; i++) {
-			results[i] = new Thread(runners[i], "RankSortT-" + i);
+			results[i] = new Thread(runners[i], "BubbleSortT-" + i);
 			results[i].setDaemon(true);
 			results[i].start();
 		}

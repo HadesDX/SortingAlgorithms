@@ -1,5 +1,6 @@
 package sorts;
 
+import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -22,10 +23,11 @@ public class CountingSort implements Sortable {
 			mm[in[i]]++;
 		}
 
+		// System.out.println("First val:" + mm[clone[0]] + " - ");
 		for (i = 1; i < m; i++) {
 			mm[i] += mm[i - 1];
 		}
-
+		// System.out.println(Arrays.toString(mm));
 		for (i = 0; i < n; i++) {
 			in[mm[clone[i]] - 1] = clone[i];
 			mm[clone[i]]--;
@@ -38,8 +40,9 @@ public class CountingSort implements Sortable {
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
-			return sortThreaded0(in, threads);
-		// return sortAtomicArray(in, threads); // 2xSlower thant the other one
+			// return sortThreaded0(in, threads);
+			// return sortPerThreadData(in, threads);10% slower
+			// return sortAtomicArray(in, threads); // 2xSlower thant the other one
 		}
 		return null;
 	}
@@ -211,6 +214,139 @@ public class CountingSort implements Sortable {
 		for (i = 0; i < threads; i++) {
 			results[i].join();
 		}
+		return in;
+	}
+
+	public int[] sortPerThreadData(int[] in, int threads) throws Exception {
+		int m = 1001;
+		int n = in.length;
+		int[] clone = in.clone();
+
+		class CountingSortRunnableT extends HelperRunnable {
+
+			CyclicBarrier barrier;
+			private int s;
+			private int e;
+			private int id;
+			private int join;
+			private int[] in;
+			private int[] result;
+			public boolean joinb = true;
+			CountingSortRunnableT[] runners;
+
+			CountingSortRunnableT(int[] in, int s, int end, CyclicBarrier barrier, int id,
+					CountingSortRunnableT[] runners) {
+				this.s = s;
+				this.in = in;
+				this.e = end;
+				this.barrier = barrier;
+				this.result = new int[m];
+				this.id = id;
+				this.join = 1;
+				this.runners = runners;
+			}
+
+			@Override
+			public void run() {
+				// System.out.println("\n" + s + "-" + e);
+				for (int i = s; i < e; i++) {
+					++result[in[i]];
+				}
+				try {
+					barrier.await();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					e.printStackTrace();
+				}
+				// Join
+				while (join < threads) {
+					if (!joinb || id + join > threads - 1) {
+						// try {
+						// Thread.sleep(100);
+						// } catch (InterruptedException e) {
+						// e.printStackTrace();
+						// }
+						// System.out.println("id: " + id + " DO NOTHING join " + join + " should join "
+						// + (id + join)
+						// + " offsetTest " + (id + join > threads) + " oddTest:" + ((id & 1) == 1) + "
+						// threads "
+						// + threads);
+					} else {
+						// System.out.println("id: " + id + " join " + join + " should join " + (id +
+						// join));
+						for (int i = 0; i < m; ++i) {
+							result[i] += runners[id + join].result[i];
+						}
+						runners[id + join].result = null;
+					}
+
+					join <<= 1;
+					try {
+						barrier.await();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (BrokenBarrierException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		class CountingSortRunnableTCheker implements Runnable {
+			CountingSortRunnableT[] runners;
+			int start = 1;
+			int join = 2;
+
+			public CountingSortRunnableTCheker(CountingSortRunnableT[] runners) {
+				this.runners = runners;
+			}
+
+			@Override
+			public void run() {
+				// System.out.println("join!");
+				for (int i = start; i < threads; i += join) {
+					// System.out.println(i);
+					runners[i].joinb = false;
+				}
+				start <<= 1;
+				join <<= 1;
+
+			}
+		}
+
+		CountingSortRunnableT[] runners = new CountingSortRunnableT[threads];
+		CountingSortRunnableTCheker checker = new CountingSortRunnableTCheker(runners);
+		CyclicBarrier barrier = new CyclicBarrier(threads, checker);
+
+		int chunks = in.length / threads;
+		int index = 0;
+		int i;
+		for (i = 0; i < threads - 1; i++) {
+			runners[i] = new CountingSortRunnableT(in, index, index + chunks, barrier, i, runners);
+			index += chunks;
+		}
+		runners[i] = new CountingSortRunnableT(in, index, in.length, barrier, i, runners);
+
+		Thread[] results = new Thread[threads];
+		for (i = 0; i < threads; i++) {
+			results[i] = new Thread(runners[i], "CountingSortT-" + i);
+			results[i].setDaemon(true);
+			results[i].start();
+		}
+		for (i = 0; i < threads; i++) {
+			results[i].join();
+		}
+
+		for (i = 1; i < m; i++) {
+			runners[0].result[i] += runners[0].result[i - 1];
+		}
+
+		for (i = 0; i < n; i++) {
+			in[runners[0].result[clone[i]] - 1] = clone[i];
+			runners[0].result[clone[i]]--;
+		}
+
 		return in;
 	}
 }

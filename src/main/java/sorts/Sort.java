@@ -24,7 +24,7 @@ public class Sort {
 	static int[] ordered = null;
 
 	public static void main(String[] args) {
-		long ltime = 1;
+		long ltime = 4000;
 		try {
 			Thread.sleep(ltime);
 		} catch (InterruptedException e) {
@@ -53,7 +53,7 @@ public class Sort {
 		}
 		int cores = Runtime.getRuntime().availableProcessors();
 		int runs = 100;
-		cores = 3;
+		cores = 8;
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
 		System.out.println("Cores per socket: " + AffinityLock.cpuLayout().coresPerSocket());
@@ -66,7 +66,7 @@ public class Sort {
 			// testSortable(new RankSort(), version, data, cores, runs);
 			testSortable(new CountingSort(), version, data, cores, runs);
 			// testSortable(new BitonicSort(), version, data, cores, runs);
-			testSortable(new QuickSort(), version, data, cores, runs);
+			// testSortable(new QuickSort(), version, data, cores, runs);
 			// testSortable(new RadixSort(), version, data, cores, runs);
 			// testSortable(new MergeSort(), version, data, cores, runs);
 		}

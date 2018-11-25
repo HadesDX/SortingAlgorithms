@@ -372,7 +372,7 @@ int RadixSort(int *input, int n) {
 
 	int l;
 
-	int t = omp_get_num_threads();
+	int t = omp_get_num_threads(); //UNUSED
 	//omp_set_num_threads(t);
 
 	//main loop

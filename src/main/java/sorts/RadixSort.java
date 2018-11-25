@@ -7,6 +7,7 @@ public class RadixSort implements Sortable {
 		int n = in.length;
 		int m = getMax(in, n);
 		for (int exp = 1; m / exp > 0; exp *= 10) {
+			System.out.println("exp: " + exp);
 			countSort(in, n, exp);
 		}
 		return in;
@@ -32,21 +33,21 @@ public class RadixSort implements Sortable {
 		return mx;
 	}
 
-	private void countSort(int arr[], int n, int exp) {
+	private void countSort(int in[], int n, int exp) {
 		int output[] = new int[n];
 		int i;
 		int count[] = new int[10];
 
 		for (i = 0; i < n; i++) {
-			count[(arr[i] / exp) % 10]++;
+			count[(in[i] / exp) % 10]++;
 		}
 		for (i = 1; i < 10; i++) {
 			count[i] += count[i - 1];
 		}
 		for (i = n - 1; i >= 0; i--) {
-			output[count[(arr[i] / exp) % 10] - 1] = arr[i];
-			count[(arr[i] / exp) % 10]--;
+			output[count[(in[i] / exp) % 10] - 1] = in[i];
+			count[(in[i] / exp) % 10]--;
 		}
-		System.arraycopy(output, 0, arr, 0, n);
+		System.arraycopy(output, 0, in, 0, n);
 	}
 }

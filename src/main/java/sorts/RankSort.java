@@ -72,7 +72,7 @@ public class RankSort implements Sortable {
 				this.id = id;
 				this.join = 1;
 				this.runners = runners;
-			}			
+			}
 
 			public void run() {
 				int i, j, k;
