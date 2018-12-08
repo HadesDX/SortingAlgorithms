@@ -99,8 +99,6 @@ public class RankSort implements Sortable {
 						result[k] = out[k];
 					}
 				}
-				// System.out.println("size:" + result.length + " - " +
-				// Arrays.toString(result));
 
 				try {
 					barrier.await();
@@ -112,19 +110,7 @@ public class RankSort implements Sortable {
 				// Join
 				while (join < threads) {
 					if (!joinb || id + join > threads - 1) {
-						// try {
-						// Thread.sleep(100);
-						// } catch (InterruptedException e) {
-						// e.printStackTrace();
-						// }
-						// System.out.println("id: " + id + " DO NOTHING join " + join + " should join "
-						// + (id + join)
-						// + " offsetTest " + (id + join > threads) + " oddTest:" + ((id & 1) == 1) + "
-						// threads "
-						// + threads);
 					} else {
-						// System.out.println("id: " + id + " join " + join + " should join " + (id +
-						// join));
 						int[] r = new int[result.length + runners[id + join].result.length];
 						merge(result, runners[id + join].result, r);
 						result = r;
@@ -154,9 +140,7 @@ public class RankSort implements Sortable {
 
 			@Override
 			public void run() {
-				// System.out.println("join!");
 				for (int i = start; i < threads; i += join) {
-					// System.out.println(i);
 					runners[i].joinb = false;
 				}
 				start <<= 1;
@@ -186,8 +170,6 @@ public class RankSort implements Sortable {
 		for (i = 0; i < threads; i++) {
 			results[i].join();
 		}
-		// System.out.println("MAIN SORT FINISH:" + System.currentTimeMillis());
-		// System.out.println("Finallizing");
 		return runners[0].result;
 	}
 

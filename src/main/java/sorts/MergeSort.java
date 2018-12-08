@@ -58,13 +58,13 @@ public class MergeSort implements Sortable {
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
-			QuickByFragmentsJoinAtTheFinal(in, threads);
+			MergeByFragmentsJoinAtTheFinal(in, threads);
 			break;
 		}
 		return in;
 	}
 
-	public int[] QuickByFragmentsJoinAtTheFinal(int[] in, int threads) throws Exception {
+	public int[] MergeByFragmentsJoinAtTheFinal(int[] in, int threads) throws Exception {
 
 		int[] buff = new int[in.length];
 

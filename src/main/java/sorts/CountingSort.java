@@ -1,13 +1,11 @@
 package sorts;
 
-import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class CountingSort implements Sortable {
 
@@ -262,19 +260,8 @@ public class CountingSort implements Sortable {
 				// Join
 				while (join < threads) {
 					if (!joinb || id + join > threads - 1) {
-						// try {
-						// Thread.sleep(100);
-						// } catch (InterruptedException e) {
-						// e.printStackTrace();
-						// }
-						// System.out.println("id: " + id + " DO NOTHING join " + join + " should join "
-						// + (id + join)
-						// + " offsetTest " + (id + join > threads) + " oddTest:" + ((id & 1) == 1) + "
-						// threads "
-						// + threads);
 					} else {
-						// System.out.println("id: " + id + " join " + join + " should join " + (id +
-						// join));
+						
 						for (int i = 0; i < m; ++i) {
 							result[i] += runners[id + join].result[i];
 						}
@@ -304,9 +291,7 @@ public class CountingSort implements Sortable {
 
 			@Override
 			public void run() {
-				// System.out.println("join!");
 				for (int i = start; i < threads; i += join) {
-					// System.out.println(i);
 					runners[i].joinb = false;
 				}
 				start <<= 1;

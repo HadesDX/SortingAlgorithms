@@ -1,6 +1,5 @@
 package sorts;
 
-import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -265,27 +264,13 @@ public class BubbleSort implements Sortable {
 				// Join
 				while (join < threads) {
 					if (!joinb || id + join > threads - 1) {
-						// try {
-						// Thread.sleep(100);
-						// } catch (InterruptedException e) {
-						// e.printStackTrace();
-						// }
-						// System.out.println("id: " + id + " DO NOTHING join " + join + " should join "
-						// + (id + join)
-						// + " offsetTest " + (id + join > threads) + " oddTest:" + ((id & 1) == 1) + "
-						// threads "
-						// + threads);
 					} else {
-						//System.out.println("id: " + id + " join " + join + " should join " + (id + join) + " s " + s
-						//		+ " e " + runners[id + join].e);
-						// if (flags.useBuff) {
+
 						merge(in, buff, s, e, runners[id + join].s, runners[id + join].e);
 						for (i = s; i < runners[id + join].e; ++i) {
 							in[i] = buff[i];
 						}
-						// } // else {
-						// merge(buff, in, s, e, runners[id + join].s, runners[id + join].e);
-						// }
+
 						e = runners[id + join].e;
 					}
 
@@ -313,15 +298,9 @@ public class BubbleSort implements Sortable {
 
 			@Override
 			public void run() {
-				// System.out.println("join!");
 				for (int i = start; i < threads; i += join) {
-					// System.out.println(i);
 					runners[i].joinb = false;
 				}
-				//flags.useBuff = !flags.useBuff;
-				//System.out.println("\nUseBuff: " + flags.useBuff);
-				//System.out.println(Arrays.toString(in));
-				//System.out.println(Arrays.toString(buff));
 				start <<= 1;
 				join <<= 1;
 			}
@@ -349,12 +328,7 @@ public class BubbleSort implements Sortable {
 		for (i = 0; i < threads; i++) {
 			results[i].join();
 		}
-		// System.out.println("MAIN SORT FINISH:" + System.currentTimeMillis());
-		// System.out.println("Finallizing");
-		// if (flags.useBuff) {
+
 		return in;
-		// } else {
-		// return buff;
-		// }
 	}
 }
