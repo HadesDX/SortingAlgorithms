@@ -177,7 +177,7 @@ public class BitonicSort implements Sortable {
 
 		Thread[] results = new Thread[threads];
 		for (i = 0; i < threads; i++) {
-			results[i] = new Thread(runners[i], "MergeSortT-" + i);
+			results[i] = new Thread(runners[i], "BitonicSortT-" + i);
 			results[i].setDaemon(true);
 			results[i].start();
 		}

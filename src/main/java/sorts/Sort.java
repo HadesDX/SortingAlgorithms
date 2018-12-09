@@ -50,8 +50,8 @@ public class Sort {
 			System.out.println(Arrays.toString(ordered));
 		}
 		int cores = Runtime.getRuntime().availableProcessors();
-		int runs = 100;
-		cores = 8;
+		int runs = 1;
+		cores = 2;
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
 		System.out.println("Cores per socket: " + AffinityLock.cpuLayout().coresPerSocket());
@@ -63,9 +63,9 @@ public class Sort {
 			// testSortable(new OddEvenSort(), version, data, cores, runs);
 			// testSortable(new RankSort(), version, data, cores, runs);
 			// testSortable(new CountingSort(), version, data, cores, runs);
-			testSortable(new BitonicSort(), version, data, cores, runs);
+			// testSortable(new BitonicSort(), version, data, cores, runs);
 			// testSortable(new QuickSort(), version, data, cores, runs);
-			// testSortable(new RadixSort(), version, data, cores, runs);
+			testSortable(new RadixSort(), version, data, cores, runs);
 			// testSortable(new MergeSort(), version, data, cores, runs);
 		}
 		if (data.length < 500) {
