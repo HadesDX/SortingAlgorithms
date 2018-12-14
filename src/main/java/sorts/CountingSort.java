@@ -38,7 +38,7 @@ public class CountingSort implements Sortable {
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
-			// return sortThreaded0(in, threads);
+			 return sortThreaded0(in, threads);
 			// return sortPerThreadData(in, threads);10% slower
 			// return sortAtomicArray(in, threads); // 2xSlower thant the other one
 		}
