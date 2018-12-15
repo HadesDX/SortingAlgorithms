@@ -4,10 +4,12 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class QuickSort implements Sortable {
+	public int[] in;
 
 	@Override
 	public int[] sort(int[] in) {
-		quickSort(in, 0, in.length - 1);
+		this.in = in;
+		quickSort(0, in.length - 1);
 		return in;
 	}
 
@@ -25,11 +27,11 @@ public class QuickSort implements Sortable {
 		return "QuickSort";
 	}
 
-	public void quickSort(int[] in, int low, int high) {
+	public void quickSort(int low, int high) {
 		if (low < high) {
 			int pi = partition(in, low, high);
-			quickSort(in, low, pi - 1);
-			quickSort(in, pi + 1, high);
+			quickSort(low, pi - 1);
+			quickSort(pi + 1, high);
 		}
 	}
 
@@ -80,7 +82,8 @@ public class QuickSort implements Sortable {
 
 			public void run() {
 				int i;
-				this.q.quickSort(in, s, e - 1);
+				this.q.in = in;
+				this.q.quickSort(s, e - 1);
 
 				try {
 					barrier.await();

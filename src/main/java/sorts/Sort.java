@@ -8,6 +8,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
+
+import javax.print.attribute.IntegerSyntax;
 
 import net.openhft.affinity.AffinityLock;
 import sorts.time.AlgoritmHistogram;
@@ -27,6 +30,7 @@ import sorts.time.Runs;
  */
 public class Sort {
 	static int[] ordered = null;
+	static int[] orderedReverse = null;
 	static AlgoritmHistogram histogram;
 	static String baseNameOut = "resultados";
 
@@ -57,51 +61,83 @@ public class Sort {
 		}
 		ordered = data.clone();
 		Arrays.sort(ordered);
+		int l = data.length;
+		orderedReverse = new int[l];
+		IntStream.range(0, data.length).parallel().forEach(e -> {
+			orderedReverse[e] = ordered[l - e - 1];
+		});
+
 		if (data.length < 500) {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
-		int runs = 10;
+		int runs = 100;
 		int minCores = 0;
-		int maxCores = Runtime.getRuntime().availableProcessors();
-		maxCores = 4;
+		int maxCores = 4;// Runtime.getRuntime().availableProcessors();
+
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
 		System.out.println("Cores per socket: " + AffinityLock.cpuLayout().coresPerSocket());
 		System.out.println("Threads per core: " + AffinityLock.cpuLayout().threadsPerCore());
-		histogram = new AlgoritmHistogram(data.length, 8, maxCores, runs);
 		// do some work while locked to a CPU.
 		int version = 0;
 		Sortable[] algs = new Sortable[] { //
-				new BubbleSort(), // n^2
-				new OddEvenSort(), // n^2
-				new RankSort(), // n^2
+				new RadixSort(), //
 				new CountingSort(), //
 				new BitonicSort(), //
 				new QuickSort(), //
-				new RadixSort(), //
-				new MergeSort() //
+				new MergeSort(), //
+				new OddEvenSort(), // n^2
+				new RankSort(), // n^2
+				new BubbleSort() // n^2
 		};
-
+		boolean u = false, o, r;
+		if (u) {
+			histogram = new AlgoritmHistogram(data.length, "Uniforme", algs.length, maxCores, runs);
+			for (int i = 0; i < algs.length; ++i) {
+				histogram.setAlgName(i, algs[i].toString());
+				testSortable(algs[i], i, version, data, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
+			}
+			try (FileWriter fw = new FileWriter("uniforme.csv"); //
+					BufferedWriter bw = new BufferedWriter(fw)) {
+				histogram.toTable(bw);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		histogram = new AlgoritmHistogram(ordered.length, "Ordenado", algs.length, maxCores, runs);
 		for (int i = 0; i < algs.length; ++i) {
 			histogram.setAlgName(i, algs[i].toString());
-			testSortable(algs[i], i, version, data, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
+			testSortable(algs[i], i, version, ordered, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
 		}
-
-		if (data.length < 500) {
-			System.out.println("Ordered Data:");
-			System.out.println(Arrays.toString(ordered));
-		}
-		try (FileWriter fw = new FileWriter("resultados.csv"); //
+		try (FileWriter fw = new FileWriter("ordenado.csv"); //
 				BufferedWriter bw = new BufferedWriter(fw)) {
 			histogram.toTable(bw);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		try {
-			histogram.toTable(System.out);
+
+		histogram = new AlgoritmHistogram(orderedReverse.length, "Inverso", algs.length, maxCores, runs);
+		for (int i = 0; i < algs.length; ++i) {
+			histogram.setAlgName(i, algs[i].toString());
+			testSortable(algs[i], i, version, orderedReverse, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
+		}
+		try (FileWriter fw = new FileWriter("inverso.csv"); //
+				BufferedWriter bw = new BufferedWriter(fw)) {
+			histogram.toTable(bw);
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+
+		// try {
+		// histogram.toTable(System.out);
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+
+		if (data.length < 500) {
+			System.out.println("Ordered Data:");
+			System.out.println(Arrays.toString(ordered));
 		}
 	}
 
