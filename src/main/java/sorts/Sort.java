@@ -31,11 +31,14 @@ import sorts.time.Runs;
 public class Sort {
 	static int[] ordered = null;
 	static int[] orderedReverse = null;
-	static AlgoritmHistogram histogram;
 	static String baseNameOut = "resultados";
 
 	public static void main(String[] args) {
 		long ltime = 4000;
+		AlgoritmHistogram histogram;
+		AlgoritmHistogram histogramO;
+		AlgoritmHistogram histogramU;
+		AlgoritmHistogram histogramR;
 		try {
 			Thread.sleep(ltime);
 		} catch (InterruptedException e) {
@@ -71,7 +74,7 @@ public class Sort {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
-		int runs = 100;
+		int runs = 10000;
 		int minCores = 0;
 		int maxCores = 4;// Runtime.getRuntime().availableProcessors();
 
@@ -86,47 +89,61 @@ public class Sort {
 				new CountingSort(), //
 				new BitonicSort(), //
 				new QuickSort(), //
-				new MergeSort(), //
-				new OddEvenSort(), // n^2
-				new RankSort(), // n^2
-				new BubbleSort() // n^2
+				new MergeSort() //
+				//new OddEvenSort(), // n^2
+				//new RankSort(), // n^2
+				//new BubbleSort() // n^2
 		};
-		boolean u = false, o, r;
+		histogramU = new AlgoritmHistogram(data.length, "Uniforme", algs.length, maxCores, runs);
+		histogramO = new AlgoritmHistogram(ordered.length, "Ordenado", algs.length, maxCores, runs);
+		histogramR = new AlgoritmHistogram(orderedReverse.length, "Inverso", algs.length, maxCores, runs);
+		for (int i = 0; i < algs.length; ++i) {
+			histogramU.setAlgName(i, algs[i].toString());
+			histogramO.setAlgName(i, algs[i].toString());
+			histogramR.setAlgName(i, algs[i].toString());
+		}
+
+		boolean u = true, o = true, r = true;
+		
 		if (u) {
-			histogram = new AlgoritmHistogram(data.length, "Uniforme", algs.length, maxCores, runs);
+			histogram = histogramU;
 			for (int i = 0; i < algs.length; ++i) {
-				histogram.setAlgName(i, algs[i].toString());
-				testSortable(algs[i], i, version, data, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
+				new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs, histogram.getAlgRuns().get(i),
+						histogram);
 			}
 			try (FileWriter fw = new FileWriter("uniforme.csv"); //
 					BufferedWriter bw = new BufferedWriter(fw)) {
-				histogram.toTable(bw);
+				histogramU.toTable(bw);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		histogram = new AlgoritmHistogram(ordered.length, "Ordenado", algs.length, maxCores, runs);
-		for (int i = 0; i < algs.length; ++i) {
-			histogram.setAlgName(i, algs[i].toString());
-			testSortable(algs[i], i, version, ordered, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
-		}
-		try (FileWriter fw = new FileWriter("ordenado.csv"); //
-				BufferedWriter bw = new BufferedWriter(fw)) {
-			histogram.toTable(bw);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		if (o) {
+			histogram = histogramO;
+			for (int i = 0; i < algs.length; ++i) {
+				new Sort().testSortable(algs[i], i, version, ordered, minCores, maxCores, runs, histogram.getAlgRuns().get(i),
+						histogram);
+			}
 
-		histogram = new AlgoritmHistogram(orderedReverse.length, "Inverso", algs.length, maxCores, runs);
-		for (int i = 0; i < algs.length; ++i) {
-			histogram.setAlgName(i, algs[i].toString());
-			testSortable(algs[i], i, version, orderedReverse, minCores, maxCores, runs, histogram.getAlgRuns().get(i));
+			try (FileWriter fw = new FileWriter("ordenado.csv"); //
+					BufferedWriter bw = new BufferedWriter(fw)) {
+				histogramO.toTable(bw);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		try (FileWriter fw = new FileWriter("inverso.csv"); //
-				BufferedWriter bw = new BufferedWriter(fw)) {
-			histogram.toTable(bw);
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (r) {
+			histogram = histogramR;
+			for (int i = 0; i < algs.length; ++i) {
+				new Sort().testSortable(algs[i], i, version, orderedReverse, minCores, maxCores, runs,
+						histogram.getAlgRuns().get(i), histogram);
+			}
+			try (FileWriter fw = new FileWriter("inverso.csv"); //
+					BufferedWriter bw = new BufferedWriter(fw)) {
+				histogramR.toTable(bw);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		// try {
@@ -141,20 +158,20 @@ public class Sort {
 		}
 	}
 
-	public static void testSortable(Sortable s, int alg, int version, int data[], int minCores, int maxCores, int runs,
-			CoresRun coresRun) {
+	public void testSortable(Sortable s, int alg, int version, int data[], int minCores, int maxCores, int runs,
+			CoresRun coresRun, AlgoritmHistogram histogram) {
 		long[] time = new long[maxCores + 1];
 		if (minCores == 0) {
-			AffinityLock singleLock = AffinityLock.acquireCore();
+			//AffinityLock singleLock = AffinityLock.acquireCore();
 			try {
 				time[0] = testSerial(s, runs, data, coresRun.getCores().get(0));
 				histogram.toTableStepByStep(baseNameOut, alg, 0);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				if (singleLock != null) {
-					singleLock.release();
-				}
+				//if (singleLock != null) {
+				//	singleLock.release();
+				//}
 			}
 		}
 		AffinityLock[] coresLocks = new AffinityLock[maxCores];
@@ -189,12 +206,12 @@ public class Sort {
 		}
 	}
 
-	public static void outEnhacement(int cores, long t1, long t2) {
+	public void outEnhacement(int cores, long t1, long t2) {
 		double val = ((double) t1 / (double) t2) * 100.0 - 100.0;
 		System.out.println("Enhacement: " + cores + " cores " + val + (val < 0 ? "% slower" : "% faster"));
 	}
 
-	public static long testSerial(Sortable s, int runs, int[] data, Runs runResults) throws Exception {
+	public long testSerial(Sortable s, int runs, int[] data, Runs runResults) throws Exception {
 		System.out.print("Serial:   " + s);
 		List<Long> times = new ArrayList<>();
 		for (int i = 0; i < runs; ++i) {
@@ -214,8 +231,8 @@ public class Sort {
 				// System.out.println(Arrays.toString(clone));
 				break;
 			}
-			System.gc();
-			Thread.sleep(10);
+			//System.gc();
+			//Thread.sleep(10);
 		}
 
 		// System.out.println(Arrays.toString(clone));
@@ -230,7 +247,7 @@ public class Sort {
 		return av;
 	}
 
-	public static long testThreaded(Sortable s, int version, int runs, int[] data, int threads, Runs runsResult)
+	public long testThreaded(Sortable s, int version, int runs, int[] data, int threads, Runs runsResult)
 			throws Exception {
 		System.out.print("Threaded: " + s + "@" + threads);
 		List<Long> times = new ArrayList<>();
@@ -253,8 +270,8 @@ public class Sort {
 				break;
 			}
 			times.add(threadedTime);
-			System.gc();
-			Thread.sleep(10);
+			//System.gc();
+			//Thread.sleep(10);
 		}
 
 		Long st = times.stream().filter(e -> e != -1).count();
@@ -268,7 +285,7 @@ public class Sort {
 		return av;
 	}
 
-	public static boolean verify(int[] data) {
+	public boolean verify(int[] data) {
 		int i;
 		if (data == null) {
 			return false;
