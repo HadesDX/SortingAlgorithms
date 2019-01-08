@@ -32,6 +32,7 @@ public class Sort {
 	static int[] ordered = null;
 	static int[] orderedReverse = null;
 	static String baseNameOut = "resultados";
+	static String strb = "";
 
 	public static void main(String[] args) {
 		long ltime = 4000;
@@ -74,8 +75,8 @@ public class Sort {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
-		int runs = 10000;
-		int minCores = 0;
+		int runs = 100;
+		int minCores = 1;
 		int maxCores = 4;// Runtime.getRuntime().availableProcessors();
 
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
@@ -85,14 +86,14 @@ public class Sort {
 		// do some work while locked to a CPU.
 		int version = 0;
 		Sortable[] algs = new Sortable[] { //
-				new RadixSort(), //
-				new CountingSort(), //
-				new BitonicSort(), //
-				new QuickSort(), //
-				new MergeSort() //
-				//new OddEvenSort(), // n^2
-				//new RankSort(), // n^2
-				//new BubbleSort() // n^2
+				// new RadixSort(), //
+				// new CountingSort(), //
+				// new BitonicSort(), //
+				// new QuickSort(), //
+				// new MergeSort() //
+				new OddEvenSort() // n^2
+				// new RankSort(), // n^2
+				// new BubbleSort() // n^2
 		};
 		histogramU = new AlgoritmHistogram(data.length, "Uniforme", algs.length, maxCores, runs);
 		histogramO = new AlgoritmHistogram(ordered.length, "Ordenado", algs.length, maxCores, runs);
@@ -103,13 +104,13 @@ public class Sort {
 			histogramR.setAlgName(i, algs[i].toString());
 		}
 
-		boolean u = true, o = true, r = true;
-		
+		boolean u = true, o = false, r = false;
+
 		if (u) {
 			histogram = histogramU;
 			for (int i = 0; i < algs.length; ++i) {
-				new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs, histogram.getAlgRuns().get(i),
-						histogram);
+				new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs,
+						histogram.getAlgRuns().get(i), histogram);
 			}
 			try (FileWriter fw = new FileWriter("uniforme.csv"); //
 					BufferedWriter bw = new BufferedWriter(fw)) {
@@ -121,8 +122,8 @@ public class Sort {
 		if (o) {
 			histogram = histogramO;
 			for (int i = 0; i < algs.length; ++i) {
-				new Sort().testSortable(algs[i], i, version, ordered, minCores, maxCores, runs, histogram.getAlgRuns().get(i),
-						histogram);
+				new Sort().testSortable(algs[i], i, version, ordered, minCores, maxCores, runs,
+						histogram.getAlgRuns().get(i), histogram);
 			}
 
 			try (FileWriter fw = new FileWriter("ordenado.csv"); //
@@ -156,22 +157,23 @@ public class Sort {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
+		System.out.println(strb);
 	}
 
 	public void testSortable(Sortable s, int alg, int version, int data[], int minCores, int maxCores, int runs,
 			CoresRun coresRun, AlgoritmHistogram histogram) {
 		long[] time = new long[maxCores + 1];
 		if (minCores == 0) {
-			//AffinityLock singleLock = AffinityLock.acquireCore();
+			// AffinityLock singleLock = AffinityLock.acquireCore();
 			try {
 				time[0] = testSerial(s, runs, data, coresRun.getCores().get(0));
 				histogram.toTableStepByStep(baseNameOut, alg, 0);
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
-				//if (singleLock != null) {
-				//	singleLock.release();
-				//}
+				// if (singleLock != null) {
+				// singleLock.release();
+				// }
 			}
 		}
 		AffinityLock[] coresLocks = new AffinityLock[maxCores];
@@ -231,8 +233,8 @@ public class Sort {
 				// System.out.println(Arrays.toString(clone));
 				break;
 			}
-			//System.gc();
-			//Thread.sleep(10);
+			// System.gc();
+			// Thread.sleep(10);
 		}
 
 		// System.out.println(Arrays.toString(clone));
@@ -253,13 +255,23 @@ public class Sort {
 		List<Long> times = new ArrayList<>();
 		for (int i = 0; i < runs; ++i) {
 			int[] clone = data.clone();
+			if (s instanceof OddEvenSort) {
+				((OddEvenSort) s).reset();
+			}
 			long t1 = System.nanoTime();
 			// System.out.println(Arrays.toString(data));
 			clone = s.sortThreaded(version, clone, threads);
 			long t2 = System.nanoTime();
-			runsResult.setRun(i, t2 - t1);
-			// System.out.println(Arrays.toString(clone));
 			long threadedTime = t2 - t1;
+
+			if (s instanceof OddEvenSort) {
+				long tt = ((OddEvenSort) s).syncLost();
+				strb += threads + "," + threadedTime + "," + tt + "," + (threadedTime - tt) + "\n";
+				System.out.println("@" + threadedTime + "/" + tt + "/" + (threadedTime - tt) + "@");
+			}
+
+			runsResult.setRun(i, threadedTime);
+			// System.out.println(Arrays.toString(clone));
 			if (verify(clone)) {
 				times.add(threadedTime);
 				System.out.print("," + threadedTime);
@@ -270,8 +282,8 @@ public class Sort {
 				break;
 			}
 			times.add(threadedTime);
-			//System.gc();
-			//Thread.sleep(10);
+			// System.gc();
+			// Thread.sleep(10);
 		}
 
 		Long st = times.stream().filter(e -> e != -1).count();

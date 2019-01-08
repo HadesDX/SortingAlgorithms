@@ -5,8 +5,13 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 public class OddEvenSort implements Sortable {
+	public int totalSyncs = 0;
+	public long[] times = new long[1000000];
+	public long[] times2 = new long[1000000];
 
 	@Override
 	public int[] sort(int[] in) {
@@ -58,9 +63,25 @@ public class OddEvenSort implements Sortable {
 	public boolean globalSwaps = false;
 	public boolean even = true;
 
+	public void reset() {
+		totalSyncs = 0;
+		for (int i = 0; i < times.length; i++) {
+			times[i] = 0;
+			times2[i] = 0;
+		}
+	}
+
+	public long syncLost() {
+		return IntStream.range(0, 1000000)//
+				.filter(e -> times[e] != 0)//
+				.mapToLong(e -> times2[e] - times[e])//
+				.reduce((x, y) -> x + y).orElse(0);
+	}
+
 	public int[] cyclicBarrier(int[] in, int threads) throws Exception {
 		// System.out.println(" @ " + this + " cyclicBarrier");
 		work = true;
+
 		class OddEvenSortRunnableCB implements Runnable {
 			private int s;
 			private int sAlt;
@@ -82,46 +103,48 @@ public class OddEvenSort implements Sortable {
 			public void run() {
 				// System.out.println(" S:" + s + " E:" + e);
 				// System.out.println(" Do work " + s / 2);
-				//try (AffinityLock al = AffinityLock.acquireCore()) {
-					int aux;
-					while (work) {
-						swaps = false;
-						// System.out.println("Do work " + s / 2);
-						if (even) {
-							for (int i = s; i < e; i += step) {
-								// System.out.println(step / 2 + " IT:" + i + " ?:" + (in[i] > in[i + 1]) + "
-								// Swap:" + swaps);
-								if (in[i] > in[i + 1]) {
-									aux = in[i];
-									in[i] = in[i + 1];
-									in[i + 1] = aux;
-									swaps = true;
-								}
-							}
-						} else {
-							for (int i = sAlt; i < e; i += step) {
-								// System.out.println(step / 2 + " IT:" + i + " ?:" + (in[i] > in[i + 1]) + "
-								// Swap:" + swaps);
-								if (in[i] > in[i + 1]) {
-									aux = in[i];
-									in[i] = in[i + 1];
-									in[i + 1] = aux;
-									swaps = true;
-								}
+				// try (AffinityLock al = AffinityLock.acquireCore()) {
+				int aux;
+				while (work) {
+					swaps = false;
+					// System.out.println("Do work " + s / 2);
+					if (even) {
+						for (int i = s; i < e; i += step) {
+							// System.out.println(step / 2 + " IT:" + i + " ?:" + (in[i] > in[i + 1]) + "
+							// Swap:" + swaps);
+							if (in[i] > in[i + 1]) {
+								aux = in[i];
+								in[i] = in[i + 1];
+								in[i + 1] = aux;
+								swaps = true;
 							}
 						}
-
-						try {
-							barrier.await();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						} catch (BrokenBarrierException e) {
-							e.printStackTrace();
+					} else {
+						for (int i = sAlt; i < e; i += step) {
+							// System.out.println(step / 2 + " IT:" + i + " ?:" + (in[i] > in[i + 1]) + "
+							// Swap:" + swaps);
+							if (in[i] > in[i + 1]) {
+								aux = in[i];
+								in[i] = in[i + 1];
+								in[i + 1] = aux;
+								swaps = true;
+							}
 						}
 					}
-				//} catch (Exception e) {
-				//	e.printStackTrace();
-				//}
+					if (times[totalSyncs] == 0) {
+						times[totalSyncs] = System.nanoTime();
+					}
+					try {
+						barrier.await();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (BrokenBarrierException e) {
+						e.printStackTrace();
+					}
+				}
+				// } catch (Exception e) {
+				// e.printStackTrace();
+				// }
 
 			}
 		}
@@ -137,6 +160,8 @@ public class OddEvenSort implements Sortable {
 			public void run() {
 				// try (AffinityLock al = AffinityLock.acquireCore()) {
 				// System.out.println("CHEKING EVEN:" + even);
+				times2[totalSyncs] = System.nanoTime();
+				++totalSyncs;
 				int i;
 				if (even) {
 					globalSwaps = false;
@@ -157,6 +182,7 @@ public class OddEvenSort implements Sortable {
 				// } catch (Exception e) {
 				// e.printStackTrace();
 				// }
+				
 			}
 		}
 
@@ -183,6 +209,7 @@ public class OddEvenSort implements Sortable {
 		}
 		// System.out.println("MAIN SORT FINISH:" + System.currentTimeMillis());
 		// System.out.println("Finallizing");
+		System.out.println("Total sync:" + totalSyncs);
 		return in;
 	}
 
