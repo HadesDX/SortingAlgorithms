@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,7 +76,7 @@ public class Sort {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
-		int runs = 100;
+		int runs = 1000;
 		int minCores = 1;
 		int maxCores = 4;// Runtime.getRuntime().availableProcessors();
 
@@ -158,6 +159,12 @@ public class Sort {
 			System.out.println(Arrays.toString(ordered));
 		}
 		System.out.println(strb);
+		try (FileWriter fw = new FileWriter("synctimeoddeven.csv");
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter out = new PrintWriter(bw)) {
+			out.println(strb);
+		} catch (IOException e) {
+		}
 	}
 
 	public void testSortable(Sortable s, int alg, int version, int data[], int minCores, int maxCores, int runs,
