@@ -23,6 +23,5 @@
 			<artifactId>affinity</artifactId>
 			<version>3.1.10</version>
 		</dependency>
-
 	</dependencies>
 </project>

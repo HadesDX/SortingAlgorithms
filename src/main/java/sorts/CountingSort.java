@@ -38,9 +38,9 @@ public class CountingSort implements Sortable {
 	public int[] sortThreaded(int version, int[] in, int threads) throws Exception {
 		switch (version) {
 		case 0:
-			 return sortThreaded0(in, threads);
-			// return sortPerThreadData(in, threads);10% slower
-			// return sortAtomicArray(in, threads); // 2xSlower thant the other one
+			return sortThreaded0(in, threads);
+		// return sortPerThreadData(in, threads);10% slower
+		// return sortAtomicArray(in, threads); // 2xSlower thant the other one
 		}
 		return null;
 	}
@@ -70,6 +70,7 @@ public class CountingSort implements Sortable {
 				}
 			}
 		}
+		//long t = System.currentTimeMillis();
 		int m = 1001;
 		int n = in.length;
 		int[] mm = new int[m];
@@ -92,24 +93,31 @@ public class CountingSort implements Sortable {
 		for (i = 0; i < threads; i++) {
 			results[i] = executor.submit(runners[i]);
 		}
+
 		for (i = 0; i < threads; i++) {
 			results[i].get();
 			for (j = 0; j < m; j++) {
 				mm[j] += runners[i].mm[j];
 			}
 		}
+		//long t2 = System.currentTimeMillis();
 
 		for (i = 1; i < m; i++) {
 			mm[i] += mm[i - 1];
 		}
+		//long t3 = System.currentTimeMillis();
 
 		for (i = 0; i < n; i++) {
 			in[mm[clone[i]] - 1] = clone[i];
 			mm[clone[i]]--;
 		}
 
+		//long t4 = System.currentTimeMillis();
 		// System.out.println("Loop End " + j);
 
+		//System.out.println("EndWorks:" + (t2 - t));
+		//System.out.println("SumaPrefijo:" + (t3 - t2));
+		//System.out.println("Reconstruccion:" + (t4 - t3));
 		executor.shutdown();
 		// System.out.println("Finallizing");
 
@@ -261,7 +269,7 @@ public class CountingSort implements Sortable {
 				while (join < threads) {
 					if (!joinb || id + join > threads - 1) {
 					} else {
-						
+
 						for (int i = 0; i < m; ++i) {
 							result[i] += runners[id + join].result[i];
 						}

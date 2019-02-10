@@ -5,13 +5,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
-
-import javax.print.attribute.IntegerSyntax;
 
 import net.openhft.affinity.AffinityLock;
 import sorts.time.AlgoritmHistogram;
@@ -30,37 +27,58 @@ import sorts.time.Runs;
  *
  */
 public class Sort {
+	public enum Dataset {
+		SMALL(null, new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38, 99, 9, 74, 80, 11, 39, 54, 94, 6, 97,
+				73, 38, 26, 74, 8, 5, 34, 73, 57, 54, 35, 62, 68, 85, 85, 81, 31, 80, 77, 54, 55, 47, 32, 34, 87, 70,
+				52, 27, 10, 90, 74, 100, 98, 81, 30, 5, 63, 33, 74, 30, 95, 70, 88, 40, 61, 69, 45, 59, 2, 11, 32, 33,
+				99, 1, 43, 2, 79, 15, 67, 25, 13, 33, 27, 24, 51, 44, 34, 18, 51, 39, 66, 8, 80, 15, 88, 43, 72 }),
+		S0_100_000("0100000_0000000_0001000.in", null), S0_200_000("0200000_0000000_0001000.in", null),
+		S0_300_000("0300000_0000000_0001000.in", null), S0_400_000("0400000_0000000_0001000.in", null),
+		S0_500_000("0500000_0000000_0001000.in", null), S0_600_000("0600000_0000000_0001000.in", null),
+		S0_700_000("0700000_0000000_0001000.in", null), S0_800_000("0800000_0000000_0001000.in", null),
+		S0_900_000("0900000_0000000_0001000.in", null), S1_000_000("1000000_0000000_0001000.in", null),
+		S2_000_000("2000000_0000000_0001000.in", null), S3_000_000("3000000_0000000_0001000.in", null),
+		S4_000_000("4000000_0000000_0001000.in", null), S5_000_000("5000000_0000000_0001000.in", null),
+		S6_000_000("6000000_0000000_0001000.in", null), S7_000_000("7000000_0000000_0001000.in", null),
+		S8_000_000("8000000_0000000_0001000.in", null), S9_000_000("9000000_0000000_0001000.in", null),;
+		public String file;
+		int[] set;
+
+		private Dataset(String file, int[] set) {
+			this.file = "Sorts" + File.separator + "data_in" + File.separator + file;
+		}
+
+		public String getFile() {
+			return file;
+		}
+
+		public int[] getSet() {
+			return set;
+		}
+	}
+
 	static int[] ordered = null;
 	static int[] orderedReverse = null;
 	static String baseNameOut = "resultados";
 	static String strb = "";
+	static long ltime = 4000;
+
+	static Dataset dataSet = Dataset.S9_000_000;
+	static int runs = 100;
+	static int minCores = 0;
+	static int maxCores = 4;// Runtime.getRuntime().availableProcessors();
+	static boolean u = true;
+	static boolean o = false;
+	static boolean r = false;
 
 	public static void main(String[] args) {
-		long ltime = 4000;
 		AlgoritmHistogram histogram;
 		AlgoritmHistogram histogramO;
 		AlgoritmHistogram histogramU;
 		AlgoritmHistogram histogramR;
-		try {
-			Thread.sleep(ltime);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 		int data[] = null;
-		boolean smallTestData = false;
-		if (smallTestData) {
-			data = new int[] { 68, 54, 15, 85, 89, 73, 23, 9, 69, 62, 39, 19, 38, 99, 9, 74, 80, 11, 39, 54, 94, 6, 97,
-					73, 38, 26, 74, 8, 5, 34, 73, 57, 54, 35, 62, 68, 85, 85, 81, 31, 80, 77, 54, 55, 47, 32, 34, 87,
-					70, 52, 27, 10, 90, 74, 100, 98, 81, 30, 5, 63, 33, 74, 30, 95, 70, 88, 40, 61, 69, 45, 59, 2, 11,
-					32, 33, 99, 1, 43, 2, 79, 15, 67, 25, 13, 33, 27, 24, 51, 44, 34, 18, 51, 39, 66, 8, 80, 15, 88, 43,
-					72 };
-		} else {
-			data = DataLoader
-					.load("Sorts" + File.separator + "data_in" + File.separator + "0100000_0000000_0001000.in");
-			// data = DataLoader
-			// .load("Sorts" + File.separator + "data_in" + File.separator +
-			// "1000000_0000000_0001000.in");
-		}
+		data = dataSet.getSet() != null ? dataSet.getSet() : DataLoader.load(dataSet.getFile());
+
 		if (data == null) {
 			System.out.println("No data");
 		}
@@ -76,9 +94,6 @@ public class Sort {
 			System.out.println("Ordered Data:");
 			System.out.println(Arrays.toString(ordered));
 		}
-		int runs = 1000;
-		int minCores = 1;
-		int maxCores = 4;// Runtime.getRuntime().availableProcessors();
 
 		System.out.println("Sockets: " + AffinityLock.cpuLayout().sockets());
 		System.out.println("Total cpus:" + AffinityLock.cpuLayout().cpus());
@@ -88,11 +103,11 @@ public class Sort {
 		int version = 0;
 		Sortable[] algs = new Sortable[] { //
 				// new RadixSort(), //
-				// new CountingSort(), //
+				new CountingSort()// , //
 				// new BitonicSort(), //
 				// new QuickSort(), //
 				// new MergeSort() //
-				new OddEvenSort() // n^2
+				// new OddEvenSort() // n^2
 				// new RankSort(), // n^2
 				// new BubbleSort() // n^2
 		};
@@ -105,7 +120,11 @@ public class Sort {
 			histogramR.setAlgName(i, algs[i].toString());
 		}
 
-		boolean u = true, o = false, r = false;
+		try {
+			Thread.sleep(ltime);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		if (u) {
 			histogram = histogramU;
@@ -300,7 +319,7 @@ public class Sort {
 		}
 		long avmilis = av / 1000000;
 		long avsec = avmilis / 1000;
-		System.out.println(" Av.Time Seconds:" + avsec + " Milis:" + avmilis + " Nanos:" + av);
+		System.out.println("\nAv.Time Seconds:" + avsec + " Milis:" + avmilis + " Nanos:" + av);
 		return av;
 	}
 
