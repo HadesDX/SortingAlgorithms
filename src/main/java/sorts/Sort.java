@@ -55,6 +55,11 @@ public class Sort {
 		public int[] getSet() {
 			return set;
 		}
+
+		public int size() {
+			return set.length;
+		}
+
 	}
 
 	static int[] ordered = null;
@@ -64,12 +69,16 @@ public class Sort {
 	static long ltime = 4000;
 
 	static Dataset dataSet = Dataset.S9_000_000;
-	static int runs = 100;
+	static Dataset[] testSets = new Dataset[] { Dataset.S0_100_000, Dataset.S1_000_000, Dataset.S2_000_000,
+			Dataset.S3_000_000, Dataset.S4_000_000, Dataset.S5_000_000, Dataset.S6_000_000, Dataset.S7_000_000,
+			Dataset.S8_000_000, Dataset.S9_000_000 };
+	static int runs = 10000;
 	static int minCores = 0;
 	static int maxCores = 4;// Runtime.getRuntime().availableProcessors();
 	static boolean u = true;
 	static boolean o = false;
 	static boolean r = false;
+	static boolean cycleDataset = true;
 
 	public static void main(String[] args) {
 		AlgoritmHistogram histogram;
@@ -102,7 +111,7 @@ public class Sort {
 		// do some work while locked to a CPU.
 		int version = 0;
 		Sortable[] algs = new Sortable[] { //
-				// new RadixSort(), //
+				new RadixSort(), //
 				new CountingSort()// , //
 				// new BitonicSort(), //
 				// new QuickSort(), //
@@ -127,16 +136,42 @@ public class Sort {
 		}
 
 		if (u) {
-			histogram = histogramU;
-			for (int i = 0; i < algs.length; ++i) {
-				new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs,
-						histogram.getAlgRuns().get(i), histogram);
-			}
-			try (FileWriter fw = new FileWriter("uniforme.csv"); //
-					BufferedWriter bw = new BufferedWriter(fw)) {
-				histogramU.toTable(bw);
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (cycleDataset) {
+				for (Dataset set : testSets) {
+					dataSet = set;
+					data = dataSet.getSet() != null ? dataSet.getSet() : DataLoader.load(dataSet.getFile());
+					ordered = data.clone();
+					Arrays.sort(ordered);
+
+					histogram = new AlgoritmHistogram(data.length, "Uniforme", algs.length, maxCores, runs);
+					histogramU = histogram;
+					for (int i = 0; i < algs.length; ++i) {
+						histogramU.setAlgName(i, algs[i].toString());
+					}
+					for (int i = 0; i < algs.length; ++i) {
+						new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs,
+								histogram.getAlgRuns().get(i), histogram);
+					}
+					try (FileWriter fw = new FileWriter(
+							baseNameOut + File.separator + "uniforme" + data.length + ".csv"); //
+							BufferedWriter bw = new BufferedWriter(fw)) {
+						histogramU.toTable(bw);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			} else {
+				histogram = histogramU;
+				for (int i = 0; i < algs.length; ++i) {
+					new Sort().testSortable(algs[i], i, version, data, minCores, maxCores, runs,
+							histogram.getAlgRuns().get(i), histogram);
+				}
+				try (FileWriter fw = new FileWriter(baseNameOut + File.separator + "uniforme" + data.length + ".csv"); //
+						BufferedWriter bw = new BufferedWriter(fw)) {
+					histogramU.toTable(bw);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		if (o) {
@@ -146,7 +181,7 @@ public class Sort {
 						histogram.getAlgRuns().get(i), histogram);
 			}
 
-			try (FileWriter fw = new FileWriter("ordenado.csv"); //
+			try (FileWriter fw = new FileWriter(baseNameOut + File.separator + "ordenado" + data.length + ".csv"); //
 					BufferedWriter bw = new BufferedWriter(fw)) {
 				histogramO.toTable(bw);
 			} catch (IOException e) {
@@ -159,7 +194,7 @@ public class Sort {
 				new Sort().testSortable(algs[i], i, version, orderedReverse, minCores, maxCores, runs,
 						histogram.getAlgRuns().get(i), histogram);
 			}
-			try (FileWriter fw = new FileWriter("inverso.csv"); //
+			try (FileWriter fw = new FileWriter(baseNameOut + File.separator + "inverso" + data.length + ".csv"); //
 					BufferedWriter bw = new BufferedWriter(fw)) {
 				histogramR.toTable(bw);
 			} catch (IOException e) {
